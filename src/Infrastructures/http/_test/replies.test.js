@@ -29,7 +29,7 @@ describe('/threads/{threadId}/comments/{commentId}/replies endpoint', () => {
       };
       const requestPayload = {
         content: 'Dokumen Negara',
-        commentId: 'thread-123',
+        commentId: 'comment-123',
         owner: 'user-123',
       };
 

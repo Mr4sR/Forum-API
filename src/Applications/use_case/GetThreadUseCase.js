@@ -1,10 +1,15 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-param-reassign */
 
 class GetThreadUseCase {
-  constructor({ threadRepository, commentRepository, replyRepository }) {
+  constructor({
+    threadRepository, commentRepository, replyRepository, likeRepository,
+  }) {
     this._threadRepository = threadRepository;
     this._commentRepository = commentRepository;
     this._replyRepository = replyRepository;
+    this._likeRepository = likeRepository;
   }
 
   async execute(useCasePayload) {
@@ -14,9 +19,10 @@ class GetThreadUseCase {
     const clearComments = await this._replaceDeletedComment(comments);
     const clearReplies = await this._replaceDeletedReply(replies);
     const commentsWithReplies = this._addReplyToComment(clearComments, clearReplies);
+    const commentsWithLikes = await this._addLikesToComment(commentsWithReplies);
     return {
       ...thread,
-      ...commentsWithReplies,
+      comments: commentsWithLikes,
     };
   }
 
@@ -45,12 +51,8 @@ class GetThreadUseCase {
   }
 
   _addReplyToComment(comments, replies) {
-    const result = comments.map((comment) => ({
-      id: comment.id,
-      username: comment.username,
-      date: comment.date,
-      content: comment.content,
-      replies: replies
+    const result = comments.map((comment) => {
+      const commentReplies = replies
         .filter((reply) => {
           if (reply.commentid === comment.id) {
             delete reply.commentid;
@@ -63,10 +65,25 @@ class GetThreadUseCase {
           content: reply.content,
           date: reply.date,
           username: reply.username,
-        })), // Transform the structure of replies
-    }));
+        })); // Transform the structure of replies
 
-    return { comments: result };
+      return {
+        id: comment.id,
+        username: comment.username,
+        date: comment.date,
+        content: comment.content,
+        replies: commentReplies,
+      };
+    });
+
+    return result;
+  }
+
+  async _addLikesToComment(comments) {
+    for (const comment of comments) {
+      comment.likeCount = await this._likeRepository.getLikesByCommentId(comment.id);
+    }
+    return comments;
   }
 }
 
