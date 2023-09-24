@@ -9,7 +9,7 @@ describe('AddReplyUseCase', () => {
   /**
    * Menguji apakah use case mampu mengoskestrasikan langkah demi langkah dengan benar.
    */
-  it('should orchestrating the add user action correctly', async () => {
+  it('should orchestrating the add reply action correctly', async () => {
     // Arrange
     const useCasePayload = {
       content: 'sebuah reply',
